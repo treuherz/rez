@@ -1,4 +1,5 @@
 use std::io::Write;
+use raytrace::Colour;
 
 fn main() -> std::io::Result<()> {
     let mut out = std::io::stdout();
@@ -21,14 +22,9 @@ fn main() -> std::io::Result<()> {
                 0.25,
             );
 
-            let coeff = 255.0;
-            let (ir, ig, ib) = (
-                (coeff * r) as i32,
-                (coeff * g) as i32,
-                (coeff * b) as i32,
-            );
+            let colour = Colour::from_normalised(r, g, b);
 
-            writeln!(out, "{} {} {}", ir, ig, ib)?;
+            writeln!(out, "{}", colour)?;
         }
     }
 
