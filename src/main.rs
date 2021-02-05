@@ -1,5 +1,5 @@
 use std::io::Write;
-use raytrace::{Colour, Ray, Vec3, Blend};
+use rez::{Colour, Ray, Vec3, Blend};
 
 fn colour(r: &Ray) -> Colour {
     let t = (r.dir.unit().y + 1.0) / 2.0;

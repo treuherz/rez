@@ -83,7 +83,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "raytrace"
+name = "rez"
 version = "0.1.0"
 dependencies = [
  "num",
