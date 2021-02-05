@@ -27,11 +27,11 @@ impl Vec3 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
-    pub fn dot(&self, rhs: &Vec3) -> f64 {
+    pub fn dot(&self, rhs: Vec3) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    pub fn cross(&self, rhs: &Vec3) -> Vec3 {
+    pub fn cross(&self, rhs: Vec3) -> Vec3 {
         Vec3 {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
