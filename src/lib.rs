@@ -1,8 +1,10 @@
-mod vec3;
+pub use colour::*;
+pub use ray::*;
 pub use vec3::*;
 
+mod vec3;
+
 mod colour;
-pub use colour::*;
 
 mod ray;
-pub use ray::*;
+

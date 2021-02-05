@@ -1,8 +1,7 @@
 use std::{
-    ops::{Add, Mul, MulAssign, Div, DivAssign, AddAssign, Neg, Sub, SubAssign},
     fmt,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
-use num::Num;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
@@ -12,8 +11,8 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
-        Vec3 { x, y, z }
+    pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Vec3 {
+        Vec3 { x: x.into(), y: y.into(), z: z.into() }
     }
 
     pub fn zero() -> Vec3 {
@@ -21,10 +20,10 @@ impl Vec3 {
     }
 
     pub fn length(&self) -> f64 {
-        self.length_squared().sqrt()
+        self.squared().sqrt()
     }
 
-    pub fn length_squared(&self) -> f64 {
+    pub fn squared(&self) -> f64 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
@@ -85,19 +84,20 @@ impl Neg for Vec3 {
     }
 }
 
-impl<N> Mul<N> for Vec3 where N: Num + Copy + Into<f64> {
+impl<N> Mul<N> for Vec3 where N: Into<f64> {
     type Output = Vec3;
 
     fn mul(self, rhs: N) -> Self::Output {
+        let rhs = rhs.into();
         Vec3 {
-            x: self.x * rhs.into(),
-            y: self.y * rhs.into(),
-            z: self.z * rhs.into(),
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
         }
     }
 }
 
-impl<N> MulAssign<N> for Vec3 where N: Num + Copy + Into<f64> {
+impl<N> MulAssign<N> for Vec3 where N: Into<f64> {
     fn mul_assign(&mut self, rhs: N) {
         *self = *self * rhs;
     }
@@ -111,19 +111,20 @@ impl Mul<Vec3> for Vec3 {
     }
 }
 
-impl<N> Div<N> for Vec3 where N: Num + Copy + Into<f64> {
+impl<N> Div<N> for Vec3 where N: Into<f64> {
     type Output = Vec3;
 
     fn div(self, rhs: N) -> Self::Output {
+        let rhs = rhs.into();
         Vec3 {
-            x: self.x / rhs.into(),
-            y: self.y / rhs.into(),
-            z: self.z / rhs.into(),
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
         }
     }
 }
 
-impl<N> DivAssign<N> for Vec3 where N: Num + Copy + Into<f64> {
+impl<N> DivAssign<N> for Vec3 where N: Into<f64> {
     fn div_assign(&mut self, rhs: N) {
         *self = *self / rhs;
     }

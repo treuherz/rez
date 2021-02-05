@@ -5,4 +5,3 @@ authors = ["Eli Treuherz <eli@treuherz.co.uk>"]
 edition = "2018"
 
 [dependencies]
-num = "0.3"
