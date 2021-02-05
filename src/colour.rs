@@ -1,36 +1,44 @@
-use std::ops::{Add, Mul, MulAssign, Div, DivAssign, AddAssign, Neg, Sub, SubAssign, Range, RangeInclusive};
-use num::Num;
-use std::fmt;
-use std::fmt::Formatter;
+use std::{
+    fmt::{
+        self,
+    },
+    ops::{RangeInclusive},
+};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Colour {
-    r: u8,
-    g: u8,
-    b: u8,
+    r: f64,
+    g: f64,
+    b: f64,
 }
 
 impl Colour {
-
-    pub fn new(r: u8, g: u8, b: u8) -> Colour {
-        Colour { r, g, b }
-    }
-
-    pub fn from_normalised(r: f64, g: f64, b: f64) -> Colour {
-        const NORM: RangeInclusive<f64> = (0f64..=1f64);
+    pub fn new(r: f64, g: f64, b: f64) -> Colour {
+        const NORM: RangeInclusive<f64> = 0f64..=1f64;
         if !NORM.contains(&r) || !NORM.contains(&g) || !NORM.contains(&b) {
             panic!("colour components must be in [0, 1]")
         }
-        Colour {
-            r: (255.0 * r).round() as u8,
-            g: (255.0 * g).round() as u8,
-            b: (255.0 * b).round() as u8,
-        }
+        Colour { r, g, b }
     }
 }
 
 impl fmt::Display for Colour {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", self.r, self.g, self.b)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let r= (255.0 * self.r).round() as u8;
+        let g= (255.0 * self.g).round() as u8;
+        let b= (255.0 * self.b).round() as u8;
+        write!(f, "{} {} {}", r, g, b)
+    }
+}
+
+pub struct Blend(pub Colour, pub Colour);
+
+impl Blend {
+    pub fn at(&self, t: f64) -> Colour {
+        Colour {
+            r: (1.0-t) * self.0.r + t * self.1.r,
+            b: (1.0-t) * self.0.b + t * self.1.b,
+            g: (1.0-t) * self.0.g + t * self.1.g,
+        }
     }
 }

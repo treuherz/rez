@@ -1,16 +1,15 @@
-use std::ops::{Add, Mul, MulAssign, Div, DivAssign, AddAssign, Neg, Sub, SubAssign};
+use std::{
+    ops::{Add, Mul, MulAssign, Div, DivAssign, AddAssign, Neg, Sub, SubAssign},
+    fmt,
+};
 use num::Num;
-use std::fmt;
-use std::fmt::Formatter;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
-
-type Point3 = Vec3;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
@@ -21,11 +20,11 @@ impl Vec3 {
         Vec3 { x: 0.0, y: 0.0, z: 0.0 }
     }
 
-    pub fn len(&self) -> f64 {
-        self.squared().sqrt()
+    pub fn length(&self) -> f64 {
+        self.length_squared().sqrt()
     }
 
-    pub fn squared(&self) -> f64 {
+    pub fn length_squared(&self) -> f64 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
@@ -42,7 +41,7 @@ impl Vec3 {
     }
 
     pub fn unit(&self) -> Vec3 {
-        return *self / self.len()
+        *self / self.length()
     }
 }
 
@@ -131,7 +130,7 @@ impl<N> DivAssign<N> for Vec3 where N: Num + Copy + Into<f64> {
 }
 
 impl fmt::Display for Vec3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
 }
