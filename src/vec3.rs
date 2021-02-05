@@ -72,34 +72,26 @@ impl SubAssign for Vec3 {
     }
 }
 
-impl Neg for Vec3 {
-    type Output = Vec3;
-
-    fn neg(self) -> Self::Output {
-        Vec3 {
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
-        }
-    }
-}
-
 impl<N> Mul<N> for Vec3 where N: Into<f64> {
     type Output = Vec3;
 
     fn mul(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Vec3 {
-            x: self.x * rhs,
-            y: self.y * rhs,
-            z: self.z * rhs,
-        }
+        Vec3 { x: self.x * rhs, y: self.y * rhs, z: self.z * rhs }
     }
 }
 
 impl<N> MulAssign<N> for Vec3 where N: Into<f64> {
     fn mul_assign(&mut self, rhs: N) {
         *self = *self * rhs;
+    }
+}
+
+impl Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        self * -1
     }
 }
 
@@ -116,11 +108,7 @@ impl<N> Div<N> for Vec3 where N: Into<f64> {
 
     fn div(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Vec3 {
-            x: self.x / rhs,
-            y: self.y / rhs,
-            z: self.z / rhs,
-        }
+        Vec3 { x: self.x / rhs, y: self.y / rhs, z: self.z / rhs }
     }
 }
 

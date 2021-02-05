@@ -1,6 +1,12 @@
+#![feature(iterator_fold_self)]
+
+use std::fs::File;
 use std::io::Write;
 
-use rez::{Blend, Collider, Colour, Ray, Sphere, Vec3};
+use indicatif::{ProgressBar, ProgressStyle};
+use itertools::iproduct;
+
+use rez::{Blend, Camera, Collider, Colour, Ray, Sphere, Vec3};
 
 fn colour<C: Collider>(r: Ray, world: C) -> Colour {
     if let Some(c) = world.collide(r, (0.0, f64::INFINITY)) {
@@ -13,13 +19,22 @@ fn colour<C: Collider>(r: Ray, world: C) -> Colour {
 }
 
 fn main() -> std::io::Result<()> {
-    let mut out = std::io::stdout();
-    let mut err = std::io::stderr();
+    let args = std::env::args().collect::<Vec<_>>();
+    let (stdout, mut lock, mut file);
+    let out: &mut dyn Write = if args.len() >= 2 && &args[1] != "-" {
+        file = File::create(&args[1])?;
+        &mut file
+    } else {
+        stdout = std::io::stdout();
+        lock = stdout.lock();
+        &mut lock
+    };
 
     // Image
     const RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u32 = 400;
-    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / RATIO) as u32;
+    const IMAGE_WIDTH: u64 = 400;
+    const IMAGE_HEIGHT: u64 = (IMAGE_WIDTH as f64 / RATIO) as u64;
+    const NUM_SAMPLES: u32 = 100;
 
     // World
     let world = {
@@ -30,37 +45,36 @@ fn main() -> std::io::Result<()> {
     };
 
     // Camera
-    let vp_height = 2.0;
-    let vp_width = RATIO * vp_height;
-    let focal_length = 1.0;
-
-    let origin = Vec3::zero();
-    let horizontal = Vec3::new(vp_width, 0, 0);
-    let vertical = Vec3::new(0, vp_height, 0);
-    let lower_left = origin + Vec3::new(-vp_width / 2.0, -vp_height / 2.0, -focal_length);
+    let cam = Camera::new();
 
     // Render
 
     write!(out, "P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT)?;
 
-    for j in (0..IMAGE_HEIGHT).rev() {
-        write!(err, "\rLines remaining: {:4}", j)?;
-        err.flush()?;
-        for i in 0..IMAGE_WIDTH {
-            let u = i as f64 / (IMAGE_WIDTH - 1) as f64;
-            let v = j as f64 / (IMAGE_HEIGHT - 1) as f64;
+    let bar = ProgressBar::new(IMAGE_HEIGHT * IMAGE_WIDTH)
+        .with_style(ProgressStyle::default_bar()
+            .template("{percent:>3}% ▕{bar:40}▏ [{eta}/{elapsed}, {per_sec}]")
+            .progress_chars("█▉▊▋▌▍▎▏ "));
 
-            let r = Ray::new(
-                origin,
-                lower_left + horizontal * u + vertical * v - origin,
-            );
-            let c = colour(r, &world);
+    for (j, i) in iproduct!((0..IMAGE_HEIGHT).rev(), 0..IMAGE_WIDTH) {
+        bar.inc(1);
+        let mut samples = Vec::new();
+        for _ in 0..NUM_SAMPLES {
+            let u = (i as f64 + rand::random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+            let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+            let r = cam.ray(u, v);
 
-            writeln!(out, "{}", c)?;
+            samples.push(colour(r, &world));
         }
+        let c = samples.iter()
+            .copied()
+            .fold_first(|a, b| (a + b))
+            .unwrap() / NUM_SAMPLES;
+
+        writeln!(out, "{}", c)?;
     }
 
-    write!(err, "\nDone\n")?;
+    bar.finish_with_message("Done");
 
     Ok(())
 }

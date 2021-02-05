@@ -58,7 +58,7 @@ impl Collider for Sphere {
             return None;
         };
 
-        return Some(Collision::from_ray(ray, t, (ray.at(t) - self.centre) / self.radius));
+        Some(Collision::from_ray(ray, t, (ray.at(t) - self.centre) / self.radius))
     }
 }
 

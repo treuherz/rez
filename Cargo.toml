@@ -5,3 +5,10 @@ authors = ["Eli Treuherz <eli@treuherz.co.uk>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.8"
+itertools = "0.10"
+
+[dependencies.indicatif]
+git = "https://github.com/mitsuhiko/indicatif"
+branch = "main"
+features = ["improved_unicode"]
