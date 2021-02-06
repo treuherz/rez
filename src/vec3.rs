@@ -48,6 +48,14 @@ impl Vec3 {
     pub fn unit(&self) -> Vec3 {
         *self / self.length()
     }
+
+    pub fn reflect_into_hemisphere(self, axis: Vec3) -> Vec3 {
+        if self.dot(axis) > 0.0 {
+            self
+        } else {
+            -self
+        }
+    }
 }
 
 impl Add for Vec3 {

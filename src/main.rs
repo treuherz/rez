@@ -16,7 +16,7 @@ fn colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     }
 
     if let Some(c) = world.collide(r, (f64::MIN_POSITIVE, f64::INFINITY)) {
-        let target = c.point + c.normal + rand::random::<Vec3>();
+        let target = c.point + rand::random::<Vec3>().unit().reflect_into_hemisphere(c.normal);
         return colour(Ray::new(c.point, target - c.point), world, depth - 1) * 0.5;
     }
 
