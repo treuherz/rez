@@ -4,8 +4,9 @@ use std::{fs::File, io};
 
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use itertools::{iproduct, Itertools};
+use rand::random;
 
-use rez::{Blend, Camera, Collider, Colour, Lambertian, Ray, Sphere, Vec3, Metal};
+use rez::{Blend, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Ray, Sphere, Vec3};
 
 fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     if depth == 0 {
@@ -45,14 +46,15 @@ fn main() -> io::Result<()> {
 
     // World
     let mat_ground = Lambertian::new(Colour::new(0.8, 0.8, 0.0));
-    let mat_mid = Lambertian::new(Colour::new(0.7, 0.3, 0.3));
-    let mat_left = Metal::new(Colour::new(0.8, 0.8, 0.8), 0.3);
-    let mat_right = Metal::new(Colour::new(0.8, 0.6, 0.2), 1.0);
+    let mat_mid = Lambertian::new(Colour::new(0.1, 0.2, 0.5));
+    let mat_left = Dielectric::new(1.5);
+    let mat_right = Metal::new(Colour::new(0.8, 0.6, 0.2), 0.0);
 
     let world: Vec<Box<dyn Collider>> = vec![
         Box::new(Sphere::new(Vec3::new(0, -100.5, -1), 100.0, &mat_ground)),
         Box::new(Sphere::new(Vec3::new(0, 0, -1), 0.5, &mat_mid)),
         Box::new(Sphere::new(Vec3::new(-1, 0, -1), 0.5, &mat_left)),
+        Box::new(Sphere::new(Vec3::new(-1, 0, -1), -0.4, &mat_left)),
         Box::new(Sphere::new(Vec3::new(1, 0, -1), 0.5, &mat_right)),
     ];
 
@@ -74,8 +76,8 @@ fn main() -> io::Result<()> {
         .map(|(j, i)| {
             (0..NUM_SAMPLES)
                 .map(|_| {
-                    let u = (i as f64 + rand::random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                    let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+                    let u = (i as f64 + random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+                    let v = (j as f64 + random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
                     let r = cam.ray(u, v);
 
                     ray_colour(r, &world, MAX_DEPTH)
