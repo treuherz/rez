@@ -1,13 +1,15 @@
+use rand::{
+    distributions::{
+        uniform::{SampleBorrow, SampleUniform, UniformFloat, UniformSampler},
+        Distribution, Standard,
+    },
+    Rng,
+};
+use rand_distr::StandardNormal;
 use std::{
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
-use rand::{
-    Rng,
-    distributions::{Distribution, Standard},
-    distributions::uniform::{UniformFloat, UniformSampler, SampleBorrow, SampleUniform}
-};
-use rand_distr::{StandardNormal};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
@@ -18,11 +20,19 @@ pub struct Vec3 {
 
 impl Vec3 {
     pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Vec3 {
-        Vec3 { x: x.into(), y: y.into(), z: z.into() }
+        Vec3 {
+            x: x.into(),
+            y: y.into(),
+            z: z.into(),
+        }
     }
 
     pub fn zero() -> Vec3 {
-        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
     pub fn length(&self) -> f64 {
@@ -66,7 +76,11 @@ impl Add for Vec3 {
     type Output = Vec3;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Vec3 { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z }
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
     }
 }
 
@@ -80,7 +94,11 @@ impl Sub for Vec3 {
     type Output = Vec3;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vec3 { x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z }
+        Vec3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
     }
 }
 
@@ -90,16 +108,26 @@ impl SubAssign for Vec3 {
     }
 }
 
-impl<N> Mul<N> for Vec3 where N: Into<f64> {
+impl<N> Mul<N> for Vec3
+where
+    N: Into<f64>,
+{
     type Output = Vec3;
 
     fn mul(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Vec3 { x: self.x * rhs, y: self.y * rhs, z: self.z * rhs }
+        Vec3 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
     }
 }
 
-impl<N> MulAssign<N> for Vec3 where N: Into<f64> {
+impl<N> MulAssign<N> for Vec3
+where
+    N: Into<f64>,
+{
     fn mul_assign(&mut self, rhs: N) {
         *self = *self * rhs;
     }
@@ -117,20 +145,34 @@ impl Mul<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
-        Vec3 { x: self.x * rhs.x, y: self.y * rhs.y, z: self.z * rhs.z }
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
     }
 }
 
-impl<N> Div<N> for Vec3 where N: Into<f64> {
+impl<N> Div<N> for Vec3
+where
+    N: Into<f64>,
+{
     type Output = Vec3;
 
     fn div(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Vec3 { x: self.x / rhs, y: self.y / rhs, z: self.z / rhs }
+        Vec3 {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
     }
 }
 
-impl<N> DivAssign<N> for Vec3 where N: Into<f64> {
+impl<N> DivAssign<N> for Vec3
+where
+    N: Into<f64>,
+{
     fn div_assign(&mut self, rhs: N) {
         *self = *self / rhs;
     }
@@ -148,7 +190,9 @@ impl Distribution<Vec3> for Standard {
             rng.sample::<f64, _>(StandardNormal),
             rng.sample::<f64, _>(StandardNormal),
             rng.sample::<f64, _>(StandardNormal),
-        ).unit() * rng.gen::<f64>().cbrt()
+        )
+        .unit()
+            * rng.gen::<f64>().cbrt()
     }
 }
 
@@ -162,9 +206,11 @@ pub struct UniformVec3 {
 impl UniformSampler for UniformVec3 {
     type X = Vec3;
 
-    fn new<B1, B2>(low: B1, high: B2) -> Self where
+    fn new<B1, B2>(low: B1, high: B2) -> Self
+    where
         B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized {
+        B2: SampleBorrow<Self::X> + Sized,
+    {
         UniformVec3 {
             x: UniformFloat::new(low.borrow().x, high.borrow().x),
             y: UniformFloat::new(low.borrow().y, high.borrow().y),
@@ -172,9 +218,11 @@ impl UniformSampler for UniformVec3 {
         }
     }
 
-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self where
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
+    where
         B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized {
+        B2: SampleBorrow<Self::X> + Sized,
+    {
         UniformVec3 {
             x: UniformFloat::new_inclusive(low.borrow().x, high.borrow().x),
             y: UniformFloat::new_inclusive(low.borrow().y, high.borrow().y),

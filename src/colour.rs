@@ -1,16 +1,7 @@
 use std::{
     fmt,
     iter::Sum,
-    ops::{
-        Add,
-        AddAssign,
-        Div,
-        DivAssign,
-        Mul,
-        MulAssign,
-        Sub,
-        SubAssign,
-    },
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -23,11 +14,21 @@ pub struct Colour {
 
 impl Colour {
     pub fn new<R: Into<f64>, B: Into<f64>, G: Into<f64>>(r: R, g: B, b: G) -> Colour {
-        Colour { r: r.into(), g: g.into(), b: b.into(), samples: 1 }
+        Colour {
+            r: r.into(),
+            g: g.into(),
+            b: b.into(),
+            samples: 1,
+        }
     }
 
     pub fn zero() -> Colour {
-        Colour { r: 0.0, g: 0.0, b: 0.0, samples: 0 }
+        Colour {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            samples: 0,
+        }
     }
 
     pub fn scale(&self, rhs: Colour) -> Colour {
@@ -35,7 +36,7 @@ impl Colour {
             r: self.r * rhs.r,
             g: self.g * rhs.r,
             b: self.b * rhs.b,
-            samples: self.samples
+            samples: self.samples,
         }
     }
 
@@ -65,7 +66,7 @@ impl AddAssign for Colour {
 }
 
 impl Sum for Colour {
-    fn sum<I: Iterator<Item=Colour>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Colour>>(iter: I) -> Self {
         iter.fold(Colour::zero(), Add::add)
     }
 }
@@ -89,31 +90,53 @@ impl SubAssign for Colour {
     }
 }
 
-impl<N> Mul<N> for Colour where N: Into<f64> {
+impl<N> Mul<N> for Colour
+where
+    N: Into<f64>,
+{
     type Output = Colour;
 
     fn mul(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Colour { r: self.r * rhs, g: self.g * rhs, b: self.b * rhs, samples: self.samples }
+        Colour {
+            r: self.r * rhs,
+            g: self.g * rhs,
+            b: self.b * rhs,
+            samples: self.samples,
+        }
     }
 }
 
-impl<N> MulAssign<N> for Colour where N: Into<f64> {
+impl<N> MulAssign<N> for Colour
+where
+    N: Into<f64>,
+{
     fn mul_assign(&mut self, rhs: N) {
         *self = *self * rhs;
     }
 }
 
-impl<N> Div<N> for Colour where N: Into<f64> {
+impl<N> Div<N> for Colour
+where
+    N: Into<f64>,
+{
     type Output = Colour;
 
     fn div(self, rhs: N) -> Self::Output {
         let rhs = rhs.into();
-        Colour { r: self.r / rhs, g: self.g / rhs, b: self.b / rhs, samples: self.samples }
+        Colour {
+            r: self.r / rhs,
+            g: self.g / rhs,
+            b: self.b / rhs,
+            samples: self.samples,
+        }
     }
 }
 
-impl<N> DivAssign<N> for Colour where N: Into<f64> {
+impl<N> DivAssign<N> for Colour
+where
+    N: Into<f64>,
+{
     fn div_assign(&mut self, rhs: N) {
         *self = *self / rhs;
     }

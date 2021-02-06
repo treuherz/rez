@@ -1,4 +1,4 @@
-use crate::{Ray, Vec3, Material, Colour};
+use crate::{Colour, Material, Ray, Vec3};
 use std::fmt::Debug;
 
 pub struct Collision<'a> {
@@ -12,7 +12,11 @@ pub struct Collision<'a> {
 impl Collision<'_> {
     fn from_ray(ray: Ray, t: f64, outward_normal: Vec3, material: &dyn Material) -> Collision {
         let front = ray.dir.dot(outward_normal) < 0.0;
-        let normal = if front { outward_normal } else { -outward_normal };
+        let normal = if front {
+            outward_normal
+        } else {
+            -outward_normal
+        };
         Collision {
             point: ray.at(t),
             normal,
@@ -40,14 +44,18 @@ pub struct Sphere<'a, M: 'a + Material> {
 
 impl<'a, M: 'a + Material> Sphere<'a, M> {
     pub fn new(centre: Vec3, radius: f64, material: &'a M) -> Self {
-        Sphere { centre, radius, material }
+        Sphere {
+            centre,
+            radius,
+            material,
+        }
     }
 }
 
 impl<'a, M: 'a + Material> Collider for Sphere<'a, M> {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         let a = ray.dir.squared();
-        let h = (ray.orig - self.centre).dot(ray.dir);  // h = b/2
+        let h = (ray.orig - self.centre).dot(ray.dir); // h = b/2
         let c = (ray.orig - self.centre).squared() - self.radius.powi(2);
 
         let discriminant = h.powi(2) - a * c;
@@ -56,7 +64,10 @@ impl<'a, M: 'a + Material> Collider for Sphere<'a, M> {
             return None;
         }
 
-        let (t1, t2) = ((-h - discriminant.sqrt()) / a, (-h + discriminant.sqrt()) / a);
+        let (t1, t2) = (
+            (-h - discriminant.sqrt()) / a,
+            (-h + discriminant.sqrt()) / a,
+        );
         let t = if t_range.0 <= t1 && t1 <= t_range.1 {
             t1
         } else if t_range.0 <= t2 && t2 <= t_range.1 {
@@ -74,7 +85,7 @@ impl<'a, M: 'a + Material> Collider for Sphere<'a, M> {
     }
 }
 
-impl <'a> Collider for &Vec<Box<dyn Collider + 'a>> {
+impl<'a> Collider for &Vec<Box<dyn Collider + 'a>> {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         self.iter()
             .filter_map(|e| e.collide(ray, t_range))

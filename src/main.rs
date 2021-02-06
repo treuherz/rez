@@ -1,14 +1,11 @@
 #![feature(iterator_fold_self)]
 
-use std::{
-    io,
-    fs::File,
-};
+use std::{fs::File, io};
 
-use indicatif::{ProgressBar, ProgressStyle, ProgressIterator};
+use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use itertools::{iproduct, Itertools};
 
-use rez::{Blend, Camera, Collider, Colour, Ray, Sphere, Vec3, Lambertian};
+use rez::{Blend, Camera, Collider, Colour, Lambertian, Ray, Sphere, Vec3};
 
 fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     if depth == 0 {
@@ -61,22 +58,25 @@ fn main() -> io::Result<()> {
 
     write!(out, "P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT)?;
 
-    let bar = ProgressBar::new(IMAGE_HEIGHT * IMAGE_WIDTH)
-        .with_style(ProgressStyle::default_bar()
+    let bar = ProgressBar::new(IMAGE_HEIGHT * IMAGE_WIDTH).with_style(
+        ProgressStyle::default_bar()
             .template("{percent:>3}% ▕{bar:40}▏ [{eta}/{elapsed}, {per_sec}]")
-            .progress_chars("█▉▊▋▌▍▎▏ "));
+            .progress_chars("█▉▊▋▌▍▎▏ "),
+    );
 
     iproduct!((0..IMAGE_HEIGHT).rev(), 0..IMAGE_WIDTH)
         .progress_with(bar)
-        .map(|(j, i)|
-            (0..NUM_SAMPLES).map(|_| {
-                let u = (i as f64 + rand::random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
-                let r = cam.ray(u, v);
+        .map(|(j, i)| {
+            (0..NUM_SAMPLES)
+                .map(|_| {
+                    let u = (i as f64 + rand::random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+                    let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+                    let r = cam.ray(u, v);
 
-                ray_colour(r, &world, MAX_DEPTH)
-            }).sum::<Colour>()
-        )
+                    ray_colour(r, &world, MAX_DEPTH)
+                })
+                .sum::<Colour>()
+        })
         .map(|c| writeln!(out, "{}", c))
         .fold_ok((), |_, _| ())
 }

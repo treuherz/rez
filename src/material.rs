@@ -1,10 +1,13 @@
-use crate::{Ray, Collision, Colour, Vec3};
+use crate::{Collision, Colour, Ray, Vec3};
 
 pub trait Material {
     fn scatter(&self, ray: Ray, collision: &Collision) -> Option<(Colour, Ray)>;
 }
 
-impl <'a, M> Material for &'a M where M: Material {
+impl<'a, M> Material for &'a M
+where
+    M: Material,
+{
     fn scatter(&self, ray: Ray, collision: &Collision) -> Option<(Colour, Ray)> {
         (*self).scatter(ray, collision)
     }
