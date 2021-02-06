@@ -2,6 +2,12 @@ use std::{
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
+use rand::{
+    Rng,
+    distributions::{Distribution, Standard},
+    distributions::uniform::{UniformFloat, UniformSampler, SampleBorrow, SampleUniform}
+};
+use rand_distr::{StandardNormal};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
@@ -122,4 +128,57 @@ impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
+}
+
+impl Distribution<Vec3> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
+        Vec3::new(
+            rng.sample::<f64, _>(StandardNormal),
+            rng.sample::<f64, _>(StandardNormal),
+            rng.sample::<f64, _>(StandardNormal),
+        ).unit() * rng.gen::<f64>().cbrt()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct UniformVec3 {
+    x: UniformFloat<f64>,
+    y: UniformFloat<f64>,
+    z: UniformFloat<f64>,
+}
+
+impl UniformSampler for UniformVec3 {
+    type X = Vec3;
+
+    fn new<B1, B2>(low: B1, high: B2) -> Self where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized {
+        UniformVec3 {
+            x: UniformFloat::new(low.borrow().x, high.borrow().x),
+            y: UniformFloat::new(low.borrow().y, high.borrow().y),
+            z: UniformFloat::new(low.borrow().z, high.borrow().z),
+        }
+    }
+
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized {
+        UniformVec3 {
+            x: UniformFloat::new_inclusive(low.borrow().x, high.borrow().x),
+            y: UniformFloat::new_inclusive(low.borrow().y, high.borrow().y),
+            z: UniformFloat::new_inclusive(low.borrow().z, high.borrow().z),
+        }
+    }
+
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        Vec3 {
+            x: self.x.sample(rng),
+            y: self.y.sample(rng),
+            z: self.z.sample(rng),
+        }
+    }
+}
+
+impl SampleUniform for Vec3 {
+    type Sampler = UniformVec3;
 }
