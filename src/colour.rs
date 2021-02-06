@@ -112,8 +112,10 @@ impl<N> DivAssign<N> for Colour where N: Into<f64> {
 
 impl fmt::Display for Colour {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        const GAMMA: f64 = 2.0;
+
         let pixel_val = |v: f64| {
-            let scaled = (v / self.samples as f64);
+            let scaled = (v / self.samples as f64).powf(GAMMA.recip());
             (255.0 * scaled.clamp(0.0, 1.0)).round() as u8
         };
 
