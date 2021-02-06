@@ -46,8 +46,8 @@ fn main() -> io::Result<()> {
     // World
     let mat_ground = Lambertian::new(Colour::new(0.8, 0.8, 0.0));
     let mat_mid = Lambertian::new(Colour::new(0.7, 0.3, 0.3));
-    let mat_left = Metal::new(Colour::new(0.8, 0.8, 0.8));
-    let mat_right = Metal::new(Colour::new(0.8, 0.6, 0.2));
+    let mat_left = Metal::new(Colour::new(0.8, 0.8, 0.8), 0.3);
+    let mat_right = Metal::new(Colour::new(0.8, 0.6, 0.2), 1.0);
 
     let world: Vec<Box<dyn Collider>> = vec![
         Box::new(Sphere::new(Vec3::new(0, -100.5, -1), 100.0, &mat_ground)),
