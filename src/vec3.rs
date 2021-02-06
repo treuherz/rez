@@ -63,12 +63,16 @@ impl Vec3 {
         *self / self.length()
     }
 
-    pub fn reflect_into_hemisphere(self, axis: Vec3) -> Vec3 {
+    pub fn ensure_in_hemisphere(self, axis: Vec3) -> Vec3 {
         if self.dot(axis) > 0.0 {
             self
         } else {
             -self
         }
+    }
+
+    pub fn reflect(self, normal: Vec3) -> Vec3 {
+        self - normal*self.dot(normal)*2.0
     }
 }
 

@@ -13,7 +13,7 @@ pub struct Colour {
 }
 
 impl Colour {
-    pub fn new<R: Into<f64>, B: Into<f64>, G: Into<f64>>(r: R, g: B, b: G) -> Colour {
+    pub fn new<R: Into<f64>, G: Into<f64>, B: Into<f64>>(r: R, g: G, b: B) -> Colour {
         Colour {
             r: r.into(),
             g: g.into(),
@@ -34,7 +34,7 @@ impl Colour {
     pub fn scale(&self, rhs: Colour) -> Colour {
         Colour {
             r: self.r * rhs.r,
-            g: self.g * rhs.r,
+            g: self.g * rhs.g,
             b: self.b * rhs.b,
             samples: self.samples,
         }

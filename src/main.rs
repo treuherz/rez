@@ -5,14 +5,14 @@ use std::{fs::File, io};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use itertools::{iproduct, Itertools};
 
-use rez::{Blend, Camera, Collider, Colour, Lambertian, Ray, Sphere, Vec3};
+use rez::{Blend, Camera, Collider, Colour, Lambertian, Ray, Sphere, Vec3, Metal};
 
 fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     if depth == 0 {
         return Colour::new(0, 0, 0);
     }
 
-    if let Some(c) = world.collide(r, (f64::MIN_POSITIVE, f64::INFINITY)) {
+    if let Some(c) = world.collide(r, (0.001, f64::INFINITY)) {
         return if let Some((attenuation, scattered)) = c.scatter(r) {
             ray_colour(scattered, world, depth - 1).scale(attenuation)
         } else {
@@ -44,11 +44,16 @@ fn main() -> io::Result<()> {
     const MAX_DEPTH: u32 = 50;
 
     // World
-    let mat_ground = Lambertian::new(Colour::new(0.5, 0.5, 0.5));
+    let mat_ground = Lambertian::new(Colour::new(0.8, 0.8, 0.0));
+    let mat_mid = Lambertian::new(Colour::new(0.7, 0.3, 0.3));
+    let mat_left = Metal::new(Colour::new(0.8, 0.8, 0.8));
+    let mat_right = Metal::new(Colour::new(0.8, 0.6, 0.2));
 
     let world: Vec<Box<dyn Collider>> = vec![
-        Box::new(Sphere::new(Vec3::new(0, 0, -1), 0.5, &mat_ground)),
         Box::new(Sphere::new(Vec3::new(0, -100.5, -1), 100.0, &mat_ground)),
+        Box::new(Sphere::new(Vec3::new(0, 0, -1), 0.5, &mat_mid)),
+        Box::new(Sphere::new(Vec3::new(-1, 0, -1), 0.5, &mat_left)),
+        Box::new(Sphere::new(Vec3::new(1, 0, -1), 0.5, &mat_right)),
     ];
 
     // Camera
