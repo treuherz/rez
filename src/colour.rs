@@ -15,10 +15,10 @@ use std::{
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Colour {
-    pub r: f64,
-    pub g: f64,
-    pub b: f64,
-    pub samples: u32,
+    r: f64,
+    g: f64,
+    b: f64,
+    samples: u32,
 }
 
 impl Colour {
@@ -28,6 +28,15 @@ impl Colour {
 
     pub fn zero() -> Colour {
         Colour { r: 0.0, g: 0.0, b: 0.0, samples: 0 }
+    }
+
+    pub fn scale(&self, rhs: Colour) -> Colour {
+        Colour {
+            r: self.r * rhs.r,
+            g: self.g * rhs.r,
+            b: self.b * rhs.b,
+            samples: self.samples
+        }
     }
 
     pub fn reset_samples(mut self) -> Colour {

@@ -33,6 +33,10 @@ impl Vec3 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
+    pub fn small(&self) -> bool {
+        self.length() < 1e-16
+    }
+
     pub fn dot(&self, rhs: Vec3) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }

@@ -8,16 +8,19 @@ use std::{
 use indicatif::{ProgressBar, ProgressStyle, ProgressIterator};
 use itertools::{iproduct, Itertools};
 
-use rez::{Blend, Camera, Collider, Colour, Ray, Sphere, Vec3};
+use rez::{Blend, Camera, Collider, Colour, Ray, Sphere, Vec3, Lambertian};
 
-fn colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
+fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     if depth == 0 {
         return Colour::new(0, 0, 0);
     }
 
     if let Some(c) = world.collide(r, (f64::MIN_POSITIVE, f64::INFINITY)) {
-        let target = c.point + rand::random::<Vec3>().unit().reflect_into_hemisphere(c.normal);
-        return colour(Ray::new(c.point, target - c.point), world, depth - 1) * 0.5;
+        return if let Some((attenuation, scattered)) = c.scatter(r) {
+            ray_colour(scattered, world, depth - 1).scale(attenuation)
+        } else {
+            Colour::new(0, 0, 0)
+        };
     }
 
     let t = (r.dir.unit().y + 1.0) / 2.0;
@@ -44,12 +47,12 @@ fn main() -> io::Result<()> {
     const MAX_DEPTH: u32 = 50;
 
     // World
-    let world = {
-        let mut world: Vec<Box<dyn Collider>> = Vec::new();
-        world.push(Box::new(Sphere::new(Vec3::new(0, 0, -1), 0.5)));
-        world.push(Box::new(Sphere::new(Vec3::new(0, -100.5, -1), 100.0)));
-        world
-    };
+    let mat_ground = Lambertian::new(Colour::new(0.5, 0.5, 0.5));
+
+    let world: Vec<Box<dyn Collider>> = vec![
+        Box::new(Sphere::new(Vec3::new(0, 0, -1), 0.5, &mat_ground)),
+        Box::new(Sphere::new(Vec3::new(0, -100.5, -1), 100.0, &mat_ground)),
+    ];
 
     // Camera
     let cam = Camera::new();
@@ -71,7 +74,7 @@ fn main() -> io::Result<()> {
                 let v = (j as f64 + rand::random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
                 let r = cam.ray(u, v);
 
-                colour(r, &world, MAX_DEPTH)
+                ray_colour(r, &world, MAX_DEPTH)
             }).sum::<Colour>()
         )
         .map(|c| writeln!(out, "{}", c))
