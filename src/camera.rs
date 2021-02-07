@@ -7,32 +7,75 @@ pub struct Camera {
     vertical: Vec3,
 }
 
-impl Camera {
-    pub fn new() -> Camera {
-        const RATIO: f64 = 16.0 / 9.0;
-        const VP_HEIGHT: f64 = 2.0;
-        const VP_WIDTH: f64 = RATIO * VP_HEIGHT;
-        const FOCAL_LENGTH: f64 = 1.0;
+#[derive(Default)]
+pub struct CameraBuilder {
+    origin: Option<Vec3>,
+    target: Option<Vec3>,
+    vup: Option<Vec3>,
+    v_fov: Option<f64>,
+    aspect_ratio: Option<f64>,
+}
 
-        let origin = Vec3::zero();
-        Camera {
-            origin,
-            llc: origin + Vec3::new(-VP_WIDTH / 2.0, -VP_HEIGHT / 2.0, -FOCAL_LENGTH),
-            horizontal: Vec3::new(VP_WIDTH, 0, 0),
-            vertical: Vec3::new(0, VP_HEIGHT, 0),
-        }
+impl CameraBuilder {
+    pub fn origin(&mut self, value: Vec3) -> &mut Self {
+        self.origin = Some(value);
+        self
+    }
+    pub fn target(&mut self, value: Vec3) -> &mut Self {
+        self.target = Some(value);
+        self
+    }
+    pub fn vup(&mut self, value: Vec3) -> &mut Self {
+        self.vup = Some(value);
+        self
+    }
+    pub fn v_fov(&mut self, value: f64) -> &mut Self {
+        self.v_fov = Some(value);
+        self
+    }
+    pub fn aspect_ratio(&mut self, value: f64) -> &mut Self {
+        self.aspect_ratio = Some(value);
+        self
     }
 
-    pub fn ray(&self, u: f64, v: f64) -> Ray {
-        Ray::new(
-            self.origin,
-            self.llc + self.horizontal * u + self.vertical * v - self.origin,
-        )
+    pub fn build(&self) -> Result<Camera, String> {
+        let origin = self.origin.ok_or(String::from("`origin` must be initialized"))?;
+        let target = self.target.ok_or(String::from("`target` must be initialized"))?;
+        let vup = self.vup.ok_or(String::from("`vup` must be initialized"))?;
+        let v_fov = self.v_fov.ok_or(String::from("`v_fov` must be initialized"))?;
+        let aspect_ratio = self.aspect_ratio.ok_or(String::from("`aspect_ratio` must be initialized"))?;
+        Ok(Camera::new(origin, target, vup, v_fov, aspect_ratio))
     }
 }
 
-impl Default for Camera {
-    fn default() -> Self {
-        Self::new()
+impl Camera {
+    pub fn builder() -> CameraBuilder {
+        CameraBuilder::default()
+    }
+
+    /// `v_fov` is in radians.
+    fn new(origin: Vec3, target: Vec3, vup: Vec3, v_fov: f64, aspect_ratio: f64) -> Camera {
+        let height = 2.0 * (v_fov / 2.0).tan();
+        let width = aspect_ratio * height;
+
+        let w = (origin - target).unit();
+        let u = vup.cross(w).unit();
+        let v = w.cross(u);
+
+        let horizontal = u * width;
+        let vertical = v * height;
+        Camera {
+            origin,
+            horizontal,
+            vertical,
+            llc: origin - horizontal / 2 - vertical / 2 - w,
+        }
+    }
+
+    pub fn ray(&self, h: f64, v: f64) -> Ray {
+        Ray::new(
+            self.origin,
+            self.llc + self.horizontal * h + self.vertical * v - self.origin,
+        )
     }
 }
