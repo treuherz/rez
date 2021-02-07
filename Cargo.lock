@@ -183,6 +183,7 @@ version = "0.1.0"
 dependencies = [
  "indicatif",
  "itertools",
+ "lazy_static",
  "rand",
  "rand_distr",
 ]

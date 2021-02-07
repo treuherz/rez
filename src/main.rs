@@ -6,7 +6,7 @@ use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use itertools::{iproduct, Itertools};
 use rand::random;
 
-use rez::{Blend, Collider, Colour, Dielectric, Lambertian, Metal, Ray, Sphere, Vec3, Camera};
+use rez::{Blend, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Ray, Sphere, Vec3};
 
 fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
     if depth == 0 {
@@ -59,12 +59,16 @@ fn main() -> io::Result<()> {
     ];
 
     // Camera
+    let origin = Vec3::new(-2, 2, 1);
+    let target = Vec3::new(0, 0, -1);
     let cam = Camera::builder()
-        .origin(Vec3::new(-2, 2, 1))
-        .target(Vec3::new(0, 0, -1))
+        .origin(origin)
+        .target(target)
         .vup(Vec3::new(0, 1, 0))
         .v_fov(f64::to_radians(20.0))
         .aspect_ratio(16.0 / 9.0)
+        .aperture(0.5)
+        .focus_dist((target - origin).length())
         .build()
         .unwrap();
 

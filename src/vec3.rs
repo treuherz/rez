@@ -1,3 +1,11 @@
+use lazy_static::lazy_static;
+use std::f64::consts::PI;
+use std::{
+    fmt,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
+
+use rand::distributions::Uniform;
 use rand::{
     distributions::{
         uniform::{SampleBorrow, SampleUniform, UniformFloat, UniformSampler},
@@ -6,10 +14,6 @@ use rand::{
     Rng,
 };
 use rand_distr::StandardNormal;
-use std::{
-    fmt,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
-};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
@@ -69,6 +73,40 @@ impl Vec3 {
         } else {
             -self
         }
+    }
+
+    pub fn random_unit<R: Rng + ?Sized>(rng: &mut R) -> Vec3 {
+        Vec3::new(
+            rng.sample::<f64, _>(StandardNormal),
+            rng.sample::<f64, _>(StandardNormal),
+            rng.sample::<f64, _>(StandardNormal),
+        )
+        .unit()
+    }
+
+    pub fn random_in_unit_sphere<R: Rng + ?Sized>(rng: &mut R) -> Vec3 {
+        lazy_static! {
+            static ref DIST: Uniform<f64> = Uniform::new(-1.0, 1.0);
+        }
+        loop {
+            let v = Vec3::new(
+                rng.sample::<f64, _>(*DIST),
+                rng.sample::<f64, _>(*DIST),
+                rng.sample::<f64, _>(*DIST),
+            );
+            if v.squared() <= 1.0 {
+                break v;
+            }
+        }
+    }
+
+    pub fn random_in_unit_disk<R: Rng + ?Sized>(rng: &mut R) -> Vec3 {
+        lazy_static! {
+            static ref DIST: Uniform<f64> = Uniform::new(0.0, 2.0 * PI);
+        }
+        let theta = rng.sample::<f64, _>(*DIST);
+        let r = rng.gen::<f64>();
+        Vec3::new(r * theta.cos(), r * theta.sin(), 0.0)
     }
 }
 
@@ -186,13 +224,7 @@ impl fmt::Display for Vec3 {
 
 impl Distribution<Vec3> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
-        Vec3::new(
-            rng.sample::<f64, _>(StandardNormal),
-            rng.sample::<f64, _>(StandardNormal),
-            rng.sample::<f64, _>(StandardNormal),
-        )
-        .unit()
-            * rng.gen::<f64>().cbrt()
+        Vec3::random_in_unit_sphere(rng)
     }
 }
 
