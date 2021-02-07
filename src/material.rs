@@ -1,7 +1,8 @@
 use std::ops::Neg;
 
-use crate::{Collision, Colour, Ray, Vec3};
 use rand::random;
+
+use crate::{Collision, Colour, Ray, Vec3};
 
 fn reflect(incident: Vec3, normal: Vec3) -> Vec3 {
     incident - normal * incident.dot(normal) * 2.0
@@ -110,7 +111,7 @@ impl Material for Dielectric {
             refract(ray.dir, col.normal, eta_ratio)
         };
 
-        let attenuation = Colour::new(1, 1, 1);
+        let attenuation = Colour::new(1.0, 1.0, 1.0);
         let scattered = Ray::new(col.point, direction);
         Some((attenuation, scattered))
     }

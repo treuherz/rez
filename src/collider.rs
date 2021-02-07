@@ -1,5 +1,6 @@
+use std::{fmt::Debug, marker::PhantomData};
+
 use crate::{Colour, Material, Ray, Vec3};
-use std::fmt::Debug;
 
 pub struct Collision<'a> {
     pub point: Vec3,
@@ -36,23 +37,29 @@ pub trait Collider {
 }
 
 #[derive(Clone, Debug)]
-pub struct Sphere<'a, M: 'a + Material> {
+pub struct Sphere<M, RM>
+where
+    M: Material,
+    RM: AsRef<M>,
+{
     pub centre: Vec3,
     pub radius: f64,
-    pub material: &'a M,
+    pub material: RM,
+    phantom: PhantomData<M>,
 }
 
-impl<'a, M: 'a + Material> Sphere<'a, M> {
-    pub fn new(centre: Vec3, radius: f64, material: &'a M) -> Self {
+impl<M: Material, RM: AsRef<M>> Sphere<M, RM> {
+    pub fn new(centre: Vec3, radius: f64, material: RM) -> Self {
         Sphere {
             centre,
             radius,
             material,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<'a, M: 'a + Material> Collider for Sphere<'a, M> {
+impl<M: Material, RM: AsRef<M>> Collider for Sphere<M, RM> {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         let a = ray.dir.squared();
         let h = (ray.orig - self.centre).dot(ray.dir); // h = b/2
@@ -80,12 +87,12 @@ impl<'a, M: 'a + Material> Collider for Sphere<'a, M> {
             ray,
             t,
             (ray.at(t) - self.centre) / self.radius,
-            self.material,
+            self.material.as_ref(),
         ))
     }
 }
 
-impl<'a> Collider for &Vec<Box<dyn Collider + 'a>> {
+impl Collider for &Vec<Box<dyn Collider + Send + Sync>> {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         self.iter()
             .filter_map(|e| e.collide(ray, t_range))

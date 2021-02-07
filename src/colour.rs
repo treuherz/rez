@@ -4,6 +4,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
+use rand::distributions::{Distribution, Standard};
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Colour {
     r: f64,
@@ -13,23 +15,33 @@ pub struct Colour {
 }
 
 impl Colour {
-    pub fn new<R: Into<f64>, G: Into<f64>, B: Into<f64>>(r: R, g: G, b: B) -> Colour {
+    pub fn new(r: f64, g: f64, b: f64) -> Colour {
         Colour {
-            r: r.into(),
-            g: g.into(),
-            b: b.into(),
+            r,
+            g,
+            b,
             samples: 1,
         }
     }
 
-    pub fn zero() -> Colour {
-        Colour {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-            samples: 0,
-        }
-    }
+    pub const ZERO: Colour = Colour {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        samples: 0,
+    };
+    pub const BLACK: Colour = Colour {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        samples: 1,
+    };
+    pub const WHITE: Colour = Colour {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        samples: 1,
+    };
 
     pub fn scale(&self, rhs: Colour) -> Colour {
         Colour {
@@ -67,7 +79,7 @@ impl AddAssign for Colour {
 
 impl Sum for Colour {
     fn sum<I: Iterator<Item = Colour>>(iter: I) -> Self {
-        iter.fold(Colour::zero(), Add::add)
+        iter.fold(Colour::ZERO, Add::add)
     }
 }
 
@@ -139,6 +151,12 @@ where
 {
     fn div_assign(&mut self, rhs: N) {
         *self = *self / rhs;
+    }
+}
+
+impl Distribution<Colour> for Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Colour {
+        Colour::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>())
     }
 }
 

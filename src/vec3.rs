@@ -1,16 +1,12 @@
-use lazy_static::lazy_static;
-use std::f64::consts::PI;
 use std::{
+    f64::consts::PI,
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use rand::distributions::Uniform;
+use lazy_static::lazy_static;
 use rand::{
-    distributions::{
-        uniform::{SampleBorrow, SampleUniform, UniformFloat, UniformSampler},
-        Distribution, Standard,
-    },
+    distributions::{Distribution, Standard, Uniform},
     Rng,
 };
 use rand_distr::StandardNormal;
@@ -23,21 +19,15 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Vec3 {
-        Vec3 {
-            x: x.into(),
-            y: y.into(),
-            z: z.into(),
-        }
+    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+        Vec3 { x, y, z }
     }
 
-    pub fn zero() -> Vec3 {
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
+    pub const ZERO: Vec3 = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
     pub fn length(&self) -> f64 {
         self.squared().sqrt()
@@ -226,51 +216,4 @@ impl Distribution<Vec3> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
         Vec3::random_in_unit_sphere(rng)
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct UniformVec3 {
-    x: UniformFloat<f64>,
-    y: UniformFloat<f64>,
-    z: UniformFloat<f64>,
-}
-
-impl UniformSampler for UniformVec3 {
-    type X = Vec3;
-
-    fn new<B1, B2>(low: B1, high: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        UniformVec3 {
-            x: UniformFloat::new(low.borrow().x, high.borrow().x),
-            y: UniformFloat::new(low.borrow().y, high.borrow().y),
-            z: UniformFloat::new(low.borrow().z, high.borrow().z),
-        }
-    }
-
-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-    where
-        B1: SampleBorrow<Self::X> + Sized,
-        B2: SampleBorrow<Self::X> + Sized,
-    {
-        UniformVec3 {
-            x: UniformFloat::new_inclusive(low.borrow().x, high.borrow().x),
-            y: UniformFloat::new_inclusive(low.borrow().y, high.borrow().y),
-            z: UniformFloat::new_inclusive(low.borrow().z, high.borrow().z),
-        }
-    }
-
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-        Vec3 {
-            x: self.x.sample(rng),
-            y: self.y.sample(rng),
-            z: self.z.sample(rng),
-        }
-    }
-}
-
-impl SampleUniform for Vec3 {
-    type Sampler = UniformVec3;
 }
