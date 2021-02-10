@@ -92,7 +92,8 @@ impl<M: Material, RM: AsRef<M>> Collider for Sphere<M, RM> {
     }
 }
 
-impl Collider for &Vec<Box<dyn Collider + Send + Sync>> {
+pub type Scene = Vec<Box<dyn Collider + Send + Sync>>;
+impl Collider for &Scene {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         self.iter()
             .filter_map(|e| e.collide(ray, t_range))

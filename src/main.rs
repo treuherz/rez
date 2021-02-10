@@ -1,32 +1,10 @@
 use std::sync::Arc;
 use std::{fs::File, io};
 
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use itertools::{iproduct, Itertools};
-use rand::{random, seq::SliceRandom, thread_rng, Rng};
-use rayon::{
-    iter::{IntoParallelRefIterator, ParallelIterator},
-    slice::ParallelSliceMut,
-};
+use itertools::iproduct;
+use rand::{random, thread_rng, Rng};
 
-use rez::{Blend, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Ray, Sphere, Vec3};
-
-fn ray_colour<C: Collider>(r: Ray, world: C, depth: u32) -> Colour {
-    if depth == 0 {
-        return Colour::new(0.0, 0.0, 0.0);
-    }
-
-    if let Some(c) = world.collide(r, (0.001, f64::INFINITY)) {
-        return if let Some((attenuation, scattered)) = c.scatter(r) {
-            ray_colour(scattered, world, depth - 1).scale(attenuation)
-        } else {
-            Colour::new(0.0, 0.0, 0.0)
-        };
-    }
-
-    let t = (r.dir.unit().y + 1.0) / 2.0;
-    Blend(Colour::WHITE, Colour::new(0.5, 0.7, 1.0)).at(t)
-}
+use rez::{Camera, Collider, Colour, Dielectric, Lambertian, Metal, Raytracer, Sphere, Vec3};
 
 fn main() -> io::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
@@ -42,8 +20,8 @@ fn main() -> io::Result<()> {
 
     // Image
     const RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH: u64 = 100;
-    const IMAGE_HEIGHT: u64 = (IMAGE_WIDTH as f64 / RATIO) as u64;
+    const IMAGE_WIDTH: u32 = 100;
+    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / RATIO) as u32;
     const NUM_SAMPLES: u32 = 200;
     const MAX_DEPTH: u32 = 50;
 
@@ -62,42 +40,16 @@ fn main() -> io::Result<()> {
         .build()
         .unwrap();
 
-    // Render
+    let r = Raytracer::new(
+        world,
+        cam,
+        IMAGE_WIDTH,
+        IMAGE_HEIGHT,
+        NUM_SAMPLES,
+        MAX_DEPTH,
+    );
 
-    let coords = {
-        let mut coords: Vec<(u64, u64)> =
-            iproduct!((0..IMAGE_HEIGHT).rev(), 0..IMAGE_WIDTH).collect();
-        // Shuffle the coordinates. Will make ~0 difference to overall performance
-        // but will make our progress bar move more evenly!
-        coords.shuffle(&mut rand::thread_rng());
-        coords
-    };
-
-    let mut pixels: Vec<((u64, u64), Colour)> = coords
-        // .iter()
-        .par_iter()
-        .progress_with(progress_bar(IMAGE_HEIGHT * IMAGE_WIDTH))
-        .map(|&(j, i)| {
-            let col = (0..NUM_SAMPLES)
-                .map(|_| {
-                    let u = (i as f64 + random::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                    let v = (j as f64 + random::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
-                    let r = cam.ray(u, v);
-
-                    ray_colour(r, world.as_ref(), MAX_DEPTH)
-                })
-                .sum::<Colour>();
-            ((i, j), col)
-        })
-        .collect::<Vec<((u64, u64), Colour)>>();
-
-    pixels.par_sort_unstable_by_key(|((i, j), _)| (IMAGE_HEIGHT - j) * IMAGE_WIDTH + i);
-
-    write!(out, "P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT)?;
-    pixels
-        .iter()
-        .map(|(_, c)| writeln!(out, "{}", c))
-        .fold_ok((), |_, _| ())
+    r.render(out)
 }
 
 fn random_scene() -> Vec<Box<dyn Collider + Send + Sync>> {
@@ -158,15 +110,4 @@ fn random_scene() -> Vec<Box<dyn Collider + Send + Sync>> {
     )));
 
     world
-}
-
-fn progress_bar(len: u64) -> ProgressBar {
-    let bar = ProgressBar::new(len);
-    bar.set_style(
-        ProgressStyle::default_bar()
-            .template("{percent:>3}%▕{bar:40}▏ [{eta}/{elapsed}, {per_sec}]")
-            .progress_chars("█▉▊▋▌▍▎▏ "),
-    );
-    bar.set_draw_delta(len / 1000);
-    bar
 }
