@@ -1,46 +1,31 @@
-use std::{
-    fmt,
-    iter::Sum,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
-};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign};
 
 use rand::distributions::{Distribution, Standard};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Colour {
-    r: f64,
-    g: f64,
-    b: f64,
-    samples: u32,
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
 }
 
 impl Colour {
     pub fn new(r: f64, g: f64, b: f64) -> Colour {
-        Colour {
-            r,
-            g,
-            b,
-            samples: 1,
-        }
+        Colour { r, g, b }
     }
 
     pub const ZERO: Colour = Colour {
         r: 0.0,
         g: 0.0,
         b: 0.0,
-        samples: 0,
     };
-    pub const BLACK: Colour = Colour {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
-        samples: 1,
-    };
+
+    pub const BLACK: Colour = Colour::ZERO;
+
     pub const WHITE: Colour = Colour {
         r: 1.0,
         g: 1.0,
         b: 1.0,
-        samples: 1,
     };
 
     pub fn scale(&self, rhs: Colour) -> Colour {
@@ -48,13 +33,7 @@ impl Colour {
             r: self.r * rhs.r,
             g: self.g * rhs.g,
             b: self.b * rhs.b,
-            samples: self.samples,
         }
-    }
-
-    pub fn reset_samples(mut self) -> Colour {
-        self.samples = 1;
-        self
     }
 }
 
@@ -66,7 +45,6 @@ impl Add for Colour {
             r: self.r + rhs.r,
             g: self.g + rhs.g,
             b: self.b + rhs.b,
-            samples: self.samples + rhs.samples,
         }
     }
 }
@@ -74,31 +52,6 @@ impl Add for Colour {
 impl AddAssign for Colour {
     fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
-    }
-}
-
-impl Sum for Colour {
-    fn sum<I: Iterator<Item = Colour>>(iter: I) -> Self {
-        iter.fold(Colour::ZERO, Add::add)
-    }
-}
-
-impl Sub for Colour {
-    type Output = Colour;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Colour {
-            r: self.r - rhs.r,
-            g: self.g - rhs.g,
-            b: self.b - rhs.b,
-            samples: self.samples - rhs.samples,
-        }
-    }
-}
-
-impl SubAssign for Colour {
-    fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
     }
 }
 
@@ -114,7 +67,6 @@ where
             r: self.r * rhs,
             g: self.g * rhs,
             b: self.b * rhs,
-            samples: self.samples,
         }
     }
 }
@@ -140,7 +92,6 @@ where
             r: self.r / rhs,
             g: self.g / rhs,
             b: self.b / rhs,
-            samples: self.samples,
         }
     }
 }
@@ -160,25 +111,10 @@ impl Distribution<Colour> for Standard {
     }
 }
 
-impl fmt::Display for Colour {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        const GAMMA: f64 = 2.0;
-
-        let pixel_val = |v: f64| {
-            let scaled = (v / self.samples as f64).powf(GAMMA.recip());
-            (255.0 * scaled.clamp(0.0, 1.0)).round() as u8
-        };
-
-        let (r, g, b) = (pixel_val(self.r), pixel_val(self.g), pixel_val(self.b));
-
-        write!(f, "{} {} {}", r, g, b)
-    }
-}
-
 pub struct Blend(pub Colour, pub Colour);
 
 impl Blend {
     pub fn at(&self, t: f64) -> Colour {
-        (self.0 * (1.0 - t) + self.1 * t).reset_samples()
+        self.0 * (1.0 - t) + self.1 * t
     }
 }

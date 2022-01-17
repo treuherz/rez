@@ -1,15 +1,15 @@
-use std::io;
+use std::iter::Sum;
 use std::sync::Arc;
 
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use itertools::{iproduct, Itertools};
+use itertools::iproduct;
 use rand::{random, seq::SliceRandom};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelIterator},
     slice::ParallelSliceMut,
 };
 
-use crate::{Blend, Camera, Collider, Colour, Ray, Scene};
+use crate::{Blend, Camera, Collider, Colour, Pixel, Ray, Scene};
 
 pub struct Raytracer {
     pub scene: Arc<Scene>,
@@ -20,6 +20,9 @@ pub struct Raytracer {
 
     pub samples_per_pixel: u32,
     pub bounce_depth: u32,
+    pub shuffle: bool,
+
+    pub gamma: f64,
 }
 
 impl Raytracer {
@@ -38,22 +41,28 @@ impl Raytracer {
             height,
             samples_per_pixel,
             bounce_depth,
+            shuffle: false,
+            gamma: 2.0,
         }
     }
 }
 
 impl Raytracer {
-    pub fn render(&self, mut out: impl io::Write) -> io::Result<()> {
+    pub fn render(&self) -> Vec<Colour> {
         let coords = {
             let mut coords: Vec<(u32, u32)> =
                 iproduct!((0..self.height).rev(), 0..self.width).collect();
-            // Shuffle the coordinates. Will make ~0 difference to overall performance
-            // but will make our progress bar move more evenly!
-            coords.shuffle(&mut rand::thread_rng());
+
+            if self.shuffle {
+                // Shuffle the coordinates. Will make ~0 difference to overall performance
+                // but will make our progress bar move more evenly!
+                coords.shuffle(&mut rand::thread_rng());
+            }
+
             coords
         };
 
-        let mut pixels: Vec<((u32, u32), Colour)> = coords
+        let mut pixels: Vec<((u32, u32), Pixel)> = coords
             .par_iter()
             .progress_with(progress_bar(self.height as u64 * self.width as u64))
             .map(|&(j, i)| {
@@ -65,18 +74,16 @@ impl Raytracer {
 
                         ray_colour(r, self.scene.as_ref(), self.bounce_depth)
                     })
-                    .sum::<Colour>();
+                    .sum::<Pixel>();
                 ((i, j), col)
             })
             .collect();
 
-        pixels.par_sort_unstable_by_key(|((i, j), _)| (self.height - j) * self.width + i);
+        if self.shuffle {
+            pixels.par_sort_unstable_by_key(|((i, j), _)| (self.height - j) * self.width + i);
+        }
 
-        write!(out, "P3\n{} {}\n255\n", self.width, self.height)?;
-        pixels
-            .iter()
-            .map(|(_, c)| writeln!(out, "{}", c))
-            .fold_ok((), |_, _| ())
+        pixels.iter().map(|&(_, p)| p.resolve(self.gamma)).collect()
     }
 }
 
@@ -106,4 +113,40 @@ fn progress_bar(len: u64) -> ProgressBar {
     );
     bar.set_draw_delta(len / 1000);
     bar
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+struct Pixel {
+    colour: Colour,
+    samples: u32,
+}
+
+impl Pixel {
+    pub fn resolve(&self, gamma: f64) -> Colour {
+        let f = |v: f64| (v / self.samples as f64).powf(gamma.recip());
+        Colour {
+            r: f(self.colour.r),
+            g: f(self.colour.g),
+            b: f(self.colour.b),
+        }
+    }
+}
+
+impl Sum<Colour> for Pixel {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Colour>,
+    {
+        iter.fold(
+            Pixel {
+                colour: Colour::ZERO,
+                samples: 0,
+            },
+            |mut p, c| {
+                p.colour += c;
+                p.samples += 1;
+                p
+            },
+        )
+    }
 }

@@ -1,10 +1,11 @@
-use std::sync::Arc;
-use std::{fs::File, io};
+use std::{fs::File, io, sync::Arc};
 
 use itertools::iproduct;
 use rand::{random, thread_rng, Rng};
 
-use rez::{Camera, Collider, Colour, Dielectric, Lambertian, Metal, Raytracer, Sphere, Vec3};
+use rez::{
+    encode_ppm, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Raytracer, Sphere, Vec3,
+};
 
 fn main() -> io::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
@@ -20,9 +21,9 @@ fn main() -> io::Result<()> {
 
     // Image
     const RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH: u32 = 100;
-    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / RATIO) as u32;
-    const NUM_SAMPLES: u32 = 200;
+    const IMAGE_HEIGHT: u32 = 100; //
+    const IMAGE_WIDTH: u32 = (IMAGE_HEIGHT as f64 * RATIO) as u32;
+    const NUM_SAMPLES: u32 = 100;
     const MAX_DEPTH: u32 = 50;
 
     // World
@@ -49,7 +50,9 @@ fn main() -> io::Result<()> {
         MAX_DEPTH,
     );
 
-    r.render(out)
+    let pixels = r.render();
+
+    encode_ppm(&pixels, IMAGE_WIDTH, IMAGE_HEIGHT, out)
 }
 
 fn random_scene() -> Vec<Box<dyn Collider + Send + Sync>> {

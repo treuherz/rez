@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, sync::Arc};
 
 use crate::{Colour, Material, Ray, Vec3};
 
@@ -37,29 +37,26 @@ pub trait Collider {
 }
 
 #[derive(Clone, Debug)]
-pub struct Sphere<M, RM>
+pub struct Sphere<M>
 where
     M: Material,
-    RM: AsRef<M>,
 {
     pub centre: Vec3,
     pub radius: f64,
-    pub material: RM,
-    phantom: PhantomData<M>,
+    pub material: Arc<M>,
 }
 
-impl<M: Material, RM: AsRef<M>> Sphere<M, RM> {
-    pub fn new(centre: Vec3, radius: f64, material: RM) -> Self {
+impl<M: Material> Sphere<M> {
+    pub fn new(centre: Vec3, radius: f64, material: Arc<M>) -> Self {
         Sphere {
             centre,
             radius,
             material,
-            phantom: PhantomData,
         }
     }
 }
 
-impl<M: Material, RM: AsRef<M>> Collider for Sphere<M, RM> {
+impl<M: Material> Collider for Sphere<M> {
     fn collide(&self, ray: Ray, t_range: (f64, f64)) -> Option<Collision> {
         let a = ray.dir.squared();
         let h = (ray.orig - self.centre).dot(ray.dir); // h = b/2
