@@ -50,7 +50,6 @@ dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
- "regex",
  "terminal_size",
  "unicode-width",
  "winapi",
@@ -156,8 +155,9 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.15.0"
-source = "git+https://github.com/mitsuhiko/indicatif?branch=main#5dd4bbf02e6fc812632faf09d759f5f2f7e71e0f"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d207dc617c7a380ab07ff572a6e52fa202a2a8f355860ac9c38e23f8196be1b"
 dependencies = [
  "console",
  "lazy_static",
