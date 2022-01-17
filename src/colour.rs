@@ -14,6 +14,11 @@ impl Colour {
         Colour { r, g, b }
     }
 
+    pub fn to_24bit_rgb(&self) -> (u8, u8, u8) {
+        let f = |v: f64| (255.0 * v.clamp(0.0, 1.0)).round() as u8;
+        (f(self.r), f(self.g), f(self.b))
+    }
+
     pub const ZERO: Colour = Colour {
         r: 0.0,
         g: 0.0,

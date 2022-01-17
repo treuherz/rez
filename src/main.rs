@@ -4,7 +4,7 @@ use itertools::iproduct;
 use rand::{random, thread_rng, Rng};
 
 use rez::{
-    encode_ppm, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Raytracer, Sphere, Vec3,
+    encode_webp, Camera, Collider, Colour, Dielectric, Lambertian, Metal, Raytracer, Sphere, Vec3,
 };
 
 fn main() -> io::Result<()> {
@@ -52,7 +52,7 @@ fn main() -> io::Result<()> {
 
     let pixels = r.render();
 
-    encode_ppm(&pixels, IMAGE_WIDTH, IMAGE_HEIGHT, out)
+    encode_webp(&pixels, IMAGE_WIDTH, IMAGE_HEIGHT, out)
 }
 
 fn random_scene() -> Vec<Box<dyn Collider + Send + Sync>> {

@@ -9,7 +9,7 @@ use rayon::{
     slice::ParallelSliceMut,
 };
 
-use crate::{Blend, Camera, Collider, Colour, Pixel, Ray, Scene};
+use crate::{Blend, Camera, Collider, Colour, Ray, Scene};
 
 pub struct Raytracer {
     pub scene: Arc<Scene>,
